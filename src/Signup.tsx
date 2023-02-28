@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
@@ -8,22 +8,28 @@ export interface SignupProps {
 }
 
 export function SignupForm() {
-  const [values, setValues] = useState<SignupProps>({
-    email: "",
-    password: "",
-  });
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isEmailValid, setEmailValid] = useState(false);
+  const [isPasswordValid, setPasswordValid] = useState(false);
+  const [isFormValid, setFormValid] = useState(false);
   const navigate = useNavigate();
 
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setValues({
-      ...values,
-      [event.target.name]: event.target.value,
-    });
-  };
+  useEffect(() => {
+    setEmailValid(/\S+@\S+\.\S+/.test(email));
+  }, [email]);
+
+  useEffect(() => {
+    setPasswordValid(password.length >= 8);
+  }, [password]);
+
+  useEffect(() => {
+    setFormValid(isEmailValid && isPasswordValid);
+  }, [isEmailValid, isPasswordValid]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const res = await signup(values);
+    const res = await signup({ email, password });
     if (res && res.status === 200) {
       alert("User created successfully");
     }
@@ -32,23 +38,33 @@ export function SignupForm() {
 
   return (
     <form onSubmit={handleSubmit}>
-      <label htmlFor="email">Email</label>
-      <input
-        type="email"
-        id="email"
-        name="email"
-        value={values.email}
-        onChange={handleChange}
-      />
-      <label htmlFor="password">Password</label>
-      <input
-        type="password"
-        id="password"
-        name="password"
-        value={values.password}
-        onChange={handleChange}
-      />
-      <button type="submit">Submit</button>
+      <label>
+        Email
+        <input
+          type="email"
+          value={email}
+          onChange={(event) => {
+            setEmail(event.target.value);
+          }}
+        />
+      </label>
+      {isEmailValid ? null : <p>Please enter a valid email address</p>}
+      <label>
+        Password
+        <input
+          type="password"
+          value={password}
+          onChange={(event) => {
+            setPassword(event.target.value);
+          }}
+        />
+      </label>
+      {isPasswordValid ? null : (
+        <p>Password must be at least 8 characters long</p>
+      )}
+      <button type="submit" disabled={!isFormValid}>
+        Submit
+      </button>
     </form>
   );
 }
