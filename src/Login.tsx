@@ -63,7 +63,7 @@ export function LoginPage() {
 
 export function login(values: SignupProps) {
   try {
-    const res = axios.post("http://localhost:3000/login", values);
+    const res = axios.post("http://localhost:8080/users/login", values);
     return res;
   } catch (error) {
     alert("Login failed");

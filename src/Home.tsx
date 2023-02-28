@@ -7,17 +7,24 @@ export function Home() {
       <h1>Home</h1>
       <button
         onClick={() => {
-          navigate("/signup");
+          navigate("/auth/signup");
         }}
       >
         회원가입
       </button>
       <button
         onClick={() => {
-          navigate("/login");
+          navigate("/auth/login");
         }}
       >
         로그인
+      </button>
+      <button
+        onClick={() => {
+          navigate("/todo");
+        }}
+      >
+        Todo
       </button>
     </div>
   );
