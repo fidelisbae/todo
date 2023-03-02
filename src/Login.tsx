@@ -22,6 +22,7 @@ export function LoginForm() {
     event.preventDefault();
     const res = await login(values);
     if (res && res.status === 200) {
+      localStorage.setItem("token", res.data.token);
       alert("Login successful");
       navigate("/");
     }
