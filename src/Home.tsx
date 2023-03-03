@@ -15,7 +15,6 @@ export function Home() {
       <button
         onClick={() => {
           if (localStorage.getItem("token")) {
-            console.log("token", localStorage.getItem("token"));
             navigate("/todo");
             return;
           }

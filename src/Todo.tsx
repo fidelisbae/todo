@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface TodoProps {
   title: string;
@@ -33,166 +33,169 @@ export function TodoPage() {
 }
 
 export async function createTodo(props: TodoProps) {
-  try {
-    const res = await axios.post("http://localhost:8080/todos/", props, {
-      headers: {
-        authorization: `${localStorage.getItem("token")}`,
-      },
-    });
-    return res;
-  } catch (error) {
-    alert(error);
-  }
+  const res = await axios.post("http://localhost:8080/todos/", props, {
+    headers: {
+      authorization: `${localStorage.getItem("token")}`,
+    },
+  });
+  return res;
+}
+
+export async function deleteTodoById(id: string) {
+  const res = await axios.delete(`http://localhost:8080/todos/${id}`, {
+    headers: {
+      authorization: `${localStorage.getItem("token")}`,
+    },
+  });
+  return res;
 }
 
 export async function getTodos() {
-  try {
-    const res = await axios.get("http://localhost:8080/todos/", {
-      headers: {
-        authorization: `${localStorage.getItem("token")}`,
-      },
-    });
-    return res;
-  } catch (error) {
-    alert(error);
-  }
+  const res = await axios.get("http://localhost:8080/todos/", {
+    headers: {
+      authorization: `${localStorage.getItem("token")}`,
+    },
+  });
+  return res;
 }
 
 export async function getTodoById(id: string) {
-  try {
-    const res = await axios.get(`http://localhost:8080/todos/${id}`, {
-      headers: {
-        authorization: `${localStorage.getItem("token")}`,
-      },
-    });
-    return res;
-  } catch (error) {
-    alert(error);
-  }
+  const res = await axios.get(`http://localhost:8080/todos/${id}`, {
+    headers: {
+      authorization: `${localStorage.getItem("token")}`,
+    },
+  });
+  return res;
 }
 
 export async function updateTodoById(id: string, props: TodoProps) {
-  try {
-    const res = await axios.put(`http://localhost:8080/todos/${id}`, props, {
-      headers: {
-        authorization: `${localStorage.getItem("token")}`,
-      },
-    });
-    return res;
-  } catch (error) {
-    alert(error);
-  }
+  const res = await axios.put(`http://localhost:8080/todos/${id}`, props, {
+    headers: {
+      authorization: `${localStorage.getItem("token")}`,
+    },
+  });
+  return res;
 }
 
-export function Todos() {
-  const [todos, setTodos] = useState([]);
+export function Todos(props: any) {
+  const [todos, setTodos] = useState<Todo[]>([]);
+  const [selectedTodo, setSelectedTodo] = useState<Todo | null>(null);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [selectedTodo, setSelectedTodo] = useState<Todo | null>(null);
+  const [updateTitle, setUpdateTitle] = useState("");
+  const [updateContent, setUpdateContent] = useState("");
 
-  const handleTitleChange = (e: any) => {
-    setTitle(e.target.value);
-  };
-
-  const handleContentChange = (e: any) => {
-    setContent(e.target.value);
-  };
-
-  const handleCreateTodo = async () => {
-    await createTodo({ title, content });
-    const res = await getTodos();
-    setTodos(res?.data.data);
-  };
+  useEffect(() => {
+    const fetchData = async () => {
+      const res = await getTodos();
+      setTodos(res.data.data);
+    };
+    fetchData();
+  }, []);
 
   const handleGetTodos = async () => {
     const res = await getTodos();
-    setTodos(res?.data.data);
+    setTodos(res.data.data);
   };
 
-  const handleGetTodo = async (id: string) => {
-    const res = await getTodoById(id);
-    return (
-      <div>
-        <h1>{res?.data.data.title}</h1>
-        <p>{res?.data.data.content}</p>
-      </div>
-    );
-  };
-
-  const handleEditTodo = (todo: any) => {
-    setSelectedTodo(todo);
-    setTitle(todo.title);
-    setContent(todo.content);
-  };
-
-  const handleSaveTodo = async () => {
-    await updateTodoById(selectedTodo?.id as string, {
+  const handleCreateTodo = async () => {
+    await createTodo({
       title,
       content,
     });
-    setSelectedTodo(null);
-    setTitle("");
-    setContent("");
-    const res = await getTodos();
-    setTodos(res?.data.data);
+    await handleGetTodos();
   };
 
-  const handleCancelEdit = () => {
+  const handleDeleteTodo = async (id: string) => {
+    await deleteTodoById(id);
+    await handleGetTodos();
+  };
+
+  const handleUpdateTodo = async (id: string) => {
+    await updateTodoById(id, {
+      title: updateTitle,
+      content: updateContent,
+    });
+    setUpdateTitle("");
+    setUpdateContent("");
     setSelectedTodo(null);
-    setTitle("");
-    setContent("");
+    await handleGetTodos();
   };
 
   return (
     <div>
       <div>
-        <label>
-          Title
-          <input type="text" value={title} onChange={handleTitleChange} />
-        </label>
-        <label>
-          Content
-          <input type="text" value={content} onChange={handleContentChange} />
-        </label>
-        <button onClick={handleCreateTodo}>Create Todo</button>
-        <button onClick={handleGetTodos}>Get Todos</button>
+        <input
+          type="text"
+          placeholder="title"
+          value={title}
+          onChange={(e) => {
+            setTitle(e.target.value);
+          }}
+        />
+        <input
+          type="text"
+          placeholder="content"
+          value={content}
+          onChange={(e) => {
+            setContent(e.target.value);
+          }}
+        />
+        <button onClick={handleCreateTodo}>추가</button>
       </div>
+      {selectedTodo && (
+        <div>
+          <input
+            type="text"
+            placeholder="title"
+            value={updateTitle}
+            onChange={(e) => {
+              setUpdateTitle(e.target.value);
+            }}
+          />
+          <input
+            type="text"
+            placeholder="content"
+            value={updateContent}
+            onChange={(e) => {
+              setUpdateContent(e.target.value);
+            }}
+          />
+          <button onClick={() => handleUpdateTodo(selectedTodo.id)}>
+            수정
+          </button>
+          <button
+            onClick={() => {
+              setSelectedTodo(null);
+              setUpdateTitle("");
+              setUpdateContent("");
+            }}
+          >
+            취소
+          </button>
+        </div>
+      )}
       <div>
-        {todos.map((todo: any) => (
+        {todos.map((todo) => (
           <div key={todo.id}>
-            {selectedTodo?.id === todo.id ? (
-              <>
-                <label>
-                  Title
-                  <input
-                    type="text"
-                    value={title}
-                    onChange={handleTitleChange}
-                  />
-                </label>
-                <label>
-                  Content
-                  <input
-                    type="text"
-                    value={content}
-                    onChange={handleContentChange}
-                  />
-                </label>
-                <button onClick={handleSaveTodo}>Save</button>
-                <button onClick={handleCancelEdit}>Cancel</button>
-              </>
-            ) : (
-              <>
-                <h1>{todo.title}</h1>
-                <p>{todo.content}</p>
-                <button onClick={handleGetTodo.bind(null, todo.id)}>
-                  Get Todo
-                </button>
-                <button onClick={() => handleEditTodo(todo)}>Edit Todo</button>
-              </>
-            )}
+            <div>
+              <h1>{todo.title}</h1>
+              <span>{todo.content}</span>
+            </div>
+            <div>
+              <button
+                onClick={() => {
+                  setSelectedTodo(todo);
+                  setUpdateTitle(todo.title);
+                  setUpdateContent(todo.content);
+                }}
+              >
+                수정
+              </button>
+              <button onClick={() => handleDeleteTodo(todo.id)}>삭제</button>
+            </div>
           </div>
-        ))}{" "}
+        ))}
       </div>
     </div>
   );
