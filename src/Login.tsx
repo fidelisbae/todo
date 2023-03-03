@@ -5,11 +5,11 @@ import { useNavigate } from "react-router-dom";
 import { SignupProps } from "./Signup";
 
 export function LoginForm() {
+  const navigate = useNavigate();
   const [values, setValues] = useState<SignupProps>({
     email: "",
     password: "",
   });
-  const navigate = useNavigate();
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setValues({
@@ -24,7 +24,7 @@ export function LoginForm() {
     if (res && res.status === 200) {
       localStorage.setItem("token", res.data.token);
       alert("Login successful");
-      navigate("/");
+      navigate("/todo");
     }
   };
 
