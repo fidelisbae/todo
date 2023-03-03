@@ -1,89 +1,27 @@
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
-import { useEffect, useState } from "react";
 
-interface TodoProps {
-  title: string;
-  content: string;
-}
-
-interface Todo {
-  id: string;
-  title: string;
-  content: string;
-}
+import {
+  createTodo,
+  deleteTodoById,
+  getTodoById,
+  getTodos,
+  updateTodoById,
+} from "./api";
+import { Todo } from "./type";
 
 export function TodoPage() {
   const navigate = useNavigate();
-  return (
-    <div>
-      <h1>Todo</h1>
-      <Todos />
-      <button
-        onClick={() => {
-          localStorage.removeItem("token");
-          alert("logout");
-          navigate("/");
-        }}
-      >
-        로그아웃
-      </button>
-    </div>
-  );
-}
-
-export async function createTodo(props: TodoProps) {
-  const res = await axios.post("http://localhost:8080/todos/", props, {
-    headers: {
-      authorization: `${localStorage.getItem("token")}`,
-    },
-  });
-  return res;
-}
-
-export async function deleteTodoById(id: string) {
-  const res = await axios.delete(`http://localhost:8080/todos/${id}`, {
-    headers: {
-      authorization: `${localStorage.getItem("token")}`,
-    },
-  });
-  return res;
-}
-
-export async function getTodos() {
-  const res = await axios.get("http://localhost:8080/todos/", {
-    headers: {
-      authorization: `${localStorage.getItem("token")}`,
-    },
-  });
-  return res;
-}
-
-export async function getTodoById(id: string) {
-  const res = await axios.get(`http://localhost:8080/todos/${id}`, {
-    headers: {
-      authorization: `${localStorage.getItem("token")}`,
-    },
-  });
-  return res;
-}
-
-export async function updateTodoById(id: string, props: TodoProps) {
-  const res = await axios.put(`http://localhost:8080/todos/${id}`, props, {
-    headers: {
-      authorization: `${localStorage.getItem("token")}`,
-    },
-  });
-  return res;
-}
-
-export function Todos(props: any) {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [selectedTodo, setSelectedTodo] = useState<Todo | null>(null);
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [updateTitle, setUpdateTitle] = useState("");
-  const [updateContent, setUpdateContent] = useState("");
+  const [values, setValues] = useState<Todo>({
+    title: "",
+    content: "",
+  });
+  const [updateValues, setUpdateValues] = useState<Todo>({
+    title: "",
+    content: "",
+  });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -93,110 +31,129 @@ export function Todos(props: any) {
     fetchData();
   }, []);
 
-  const handleGetTodos = async () => {
-    const res = await getTodos();
-    setTodos(res.data.data);
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setValues({
+      ...values,
+      [event.target.name]: event.target.value,
+    });
+  };
+
+  const handleUpdateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setUpdateValues({
+      ...updateValues,
+      [event.target.name]: event.target.value,
+    });
   };
 
   const handleCreateTodo = async () => {
-    await createTodo({
-      title,
-      content,
-    });
-    await handleGetTodos();
+    try {
+      await createTodo(values);
+      setValues({ title: "", content: "" });
+      handleGetTodos();
+    } catch (error) {
+      alert("에러");
+    }
   };
 
   const handleDeleteTodo = async (id: string) => {
-    await deleteTodoById(id);
-    await handleGetTodos();
+    try {
+      await deleteTodoById(id);
+      handleGetTodos();
+    } catch (error) {
+      alert("에러");
+    }
   };
 
-  const handleUpdateTodo = async (id: string) => {
-    await updateTodoById(id, {
-      title: updateTitle,
-      content: updateContent,
-    });
-    setUpdateTitle("");
-    setUpdateContent("");
-    setSelectedTodo(null);
-    await handleGetTodos();
+  const handleGetTodos = async () => {
+    try {
+      const res = await getTodos();
+      setTodos(res.data.data);
+    } catch (error) {
+      alert("에러");
+    }
+  };
+
+  const handleGetTodoById = async (id: string) => {
+    try {
+      const res = await getTodoById(id);
+      setSelectedTodo(res.data.data);
+      setUpdateValues({
+        title: res.data.data.title,
+        content: res.data.data.content,
+      });
+    } catch (error) {
+      alert("에러");
+    }
+  };
+
+  const handleUpdateTodoById = async (id: string) => {
+    try {
+      await updateTodoById(id, {
+        title: updateValues.title,
+        content: updateValues.content,
+      });
+      setSelectedTodo(null);
+      setUpdateValues({
+        title: "",
+        content: "",
+      });
+      handleGetTodos();
+    } catch (error) {
+      alert("에러");
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    alert("로그아웃");
+    navigate("/");
   };
 
   return (
     <div>
+      <h1>Todo</h1>
       <div>
-        <input
-          type="text"
-          placeholder="title"
-          value={title}
-          onChange={(e) => {
-            setTitle(e.target.value);
-          }}
-        />
-        <input
-          type="text"
-          placeholder="content"
-          value={content}
-          onChange={(e) => {
-            setContent(e.target.value);
-          }}
-        />
+        제목
+        <input name="title" value={values.title} onChange={handleChange} />
+        내용
+        <input name="content" value={values.content} onChange={handleChange} />
         <button onClick={handleCreateTodo}>추가</button>
       </div>
       {selectedTodo && (
         <div>
+          제목
           <input
-            type="text"
-            placeholder="title"
-            value={updateTitle}
-            onChange={(e) => {
-              setUpdateTitle(e.target.value);
-            }}
+            name="title"
+            value={updateValues.title}
+            onChange={handleUpdateChange}
           />
+          내용
           <input
-            type="text"
-            placeholder="content"
-            value={updateContent}
-            onChange={(e) => {
-              setUpdateContent(e.target.value);
-            }}
+            name="content"
+            value={updateValues.content}
+            onChange={handleUpdateChange}
           />
-          <button onClick={() => handleUpdateTodo(selectedTodo.id)}>
+          <button
+            onClick={() => handleUpdateTodoById(selectedTodo.id as string)}
+          >
             수정
           </button>
-          <button
-            onClick={() => {
-              setSelectedTodo(null);
-              setUpdateTitle("");
-              setUpdateContent("");
-            }}
-          >
-            취소
-          </button>
+          <button onClick={() => setSelectedTodo(null)}>취소</button>
         </div>
       )}
-      <div>
-        {todos.map((todo) => (
-          <div key={todo.id}>
-            <div>
-              <h1>{todo.title}</h1>
-              <span>{todo.content}</span>
-            </div>
-            <div>
-              <button
-                onClick={() => {
-                  setSelectedTodo(todo);
-                  setUpdateTitle(todo.title);
-                  setUpdateContent(todo.content);
-                }}
-              >
-                수정
-              </button>
-              <button onClick={() => handleDeleteTodo(todo.id)}>삭제</button>
-            </div>
-          </div>
-        ))}
-      </div>
+      {todos.map((todo) => (
+        <div key={todo.id}>
+          <h2>{todo.title}</h2>
+          <p>{todo.content}</p>
+          <button onClick={() => handleDeleteTodo(todo.id as string)}>
+            삭제
+          </button>
+          <button onClick={() => handleGetTodoById(todo.id as string)}>
+            수정
+          </button>
+        </div>
+      ))}
+      <button onClick={handleLogout}>로그아웃</button>
     </div>
   );
 }
