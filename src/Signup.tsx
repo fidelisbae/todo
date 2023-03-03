@@ -29,11 +29,17 @@ export function SignupForm() {
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const res = await signup({ email, password });
-    if (res && res.status === 200) {
-      alert("User created successfully");
+    try {
+      await signup({
+        email,
+        password,
+      });
+      alert("Signup successful");
+      navigate("/todo");
+    } catch (error) {
+      alert(error);
+      navigate("/auth/signup");
     }
-    navigate("/");
   };
 
   return (
@@ -81,10 +87,7 @@ export function SignupPage() {
 }
 
 export async function signup(values: SignupProps) {
-  try {
-    const res = await axios.post("http://localhost:8080/users/create", values);
-    return res;
-  } catch (error) {
-    alert(error);
-  }
+  const res = await axios.post("http://localhost:8080/users/create", values);
+  localStorage.setItem("token", res.data.token);
+  return res;
 }
