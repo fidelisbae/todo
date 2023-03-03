@@ -14,17 +14,15 @@ export function Home() {
       </button>
       <button
         onClick={() => {
+          if (localStorage.getItem("token")) {
+            console.log("token", localStorage.getItem("token"));
+            navigate("/todo");
+            return;
+          }
           navigate("/auth/login");
         }}
       >
         로그인
-      </button>
-      <button
-        onClick={() => {
-          navigate("/todo");
-        }}
-      >
-        Todo
       </button>
     </div>
   );
