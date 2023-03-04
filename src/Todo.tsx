@@ -119,38 +119,43 @@ export function TodoPage() {
         <input name="content" value={values.content} onChange={handleChange} />
         <button onClick={handleCreateTodo}>추가</button>
       </div>
-      {selectedTodo && (
-        <div>
-          제목
-          <input
-            name="title"
-            value={updateValues.title}
-            onChange={handleUpdateChange}
-          />
-          내용
-          <input
-            name="content"
-            value={updateValues.content}
-            onChange={handleUpdateChange}
-          />
-          <button
-            onClick={() => handleUpdateTodoById(selectedTodo.id as string)}
-          >
-            수정
-          </button>
-          <button onClick={() => setSelectedTodo(null)}>취소</button>
-        </div>
-      )}
+
       {todos.map((todo) => (
         <div key={todo.id}>
           <h2>{todo.title}</h2>
           <p>{todo.content}</p>
-          <button onClick={() => handleDeleteTodo(todo.id as string)}>
-            삭제
-          </button>
-          <button onClick={() => handleGetTodoById(todo.id as string)}>
-            수정
-          </button>
+          {!selectedTodo && (
+            <button onClick={() => handleDeleteTodo(todo.id as string)}>
+              삭제
+            </button>
+          )}
+          {!selectedTodo && (
+            <button onClick={() => handleGetTodoById(todo.id as string)}>
+              수정
+            </button>
+          )}
+          {(selectedTodo?.id as string) === todo.id && (
+            <div>
+              제목
+              <input
+                name="title"
+                value={updateValues.title}
+                onChange={handleUpdateChange}
+              />
+              내용
+              <input
+                name="content"
+                value={updateValues.content}
+                onChange={handleUpdateChange}
+              />
+              <button
+                onClick={() => handleUpdateTodoById(selectedTodo?.id as string)}
+              >
+                수정
+              </button>
+              <button onClick={() => setSelectedTodo(null)}>취소</button>
+            </div>
+          )}
         </div>
       ))}
       <button onClick={handleLogout}>로그아웃</button>
